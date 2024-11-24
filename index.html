@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personalized Investment Portfolio Advisor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: "Roboto", Arial, sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .section {
+        display: none;
+        text-align: center;
+        /* max-width: fit-content; */
+        max-width: 500px;
+        margin: auto;
+        padding: 20px;
+        border-radius: 10px;
+        background: white;
+        box-sizing: border-box;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .section.active {
+        display: block;
+      }
+
+      h1,
+      h2 {
+        color: #007bff;
+      }
+      h2 {
+        text-align: left;
+      }
+
+      button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 20px;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      label {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        /* justify-content: center; */
+        margin-bottom: 10px;
+        gap: 10px;
+      }
+
+      #input-goal,
+      select {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+
+      .description {
+        display: inline;
+        margin-left: 5px;
+        font-size: 0.9rem;
+        color: #666;
+      }
+
+      .desc-radio {
+        white-space: nowrap;
+      }
+
+      input[type="radio"] {
+        margin: 0;
+        padding: 0;
+      }
+
+      canvas {
+        width: 100%;
+        max-width: 400px;
+        height: auto;
+      }
+
+      /* Small Devices (Phones) */
+      @media (max-width: 600px) {
+        body {
+          padding: 10px;
+        }
+
+        .section {
+          max-width: 90%;
+          padding: 15px;
+        }
+
+        h1,
+        h2 {
+          font-size: 1.5rem;
+        }
+
+        button {
+          padding: 10px;
+          font-size: 0.9rem;
+        }
+
+        label {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .description {
+          font-size: 0.8rem;
+        }
+      }
+
+      /* Medium Devices (Tablets) */
+      @media (min-width: 601px) and (max-width: 1024px) {
+        .section {
+          max-width: 80%;
+          padding: 20px;
+        }
+
+        h1,
+        h2 {
+          font-size: 1.8rem;
+        }
+
+        button {
+          padding: 12px;
+          font-size: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Welcome Screen -->
+    <div id="welcome-screen" class="section active">
+      <h1>Personalized Investment Portfolio Advisor</h1>
+      <p>Get tailored investment strategies based on your preferences</p>
+      <button onclick="startForm()">Start</button>
+    </div>
+
+    <!-- Input Form -->
+    <div id="form-section" class="section">
+      <h1>Personalized Investment Portfolio Advisor</h1>
+
+      <form id="portfolioForm">
+        <!-- Risk Tolerance -->
+        <div>
+          <h2>Select Your Risk Tolerance</h2>
+          <label>
+            <input type="radio" name="risk" value="Conservative" required />
+            Conservative
+            <small class="description desc-radio"
+              >Low risk, prioritizing capital preservation over returns.</small
+            >
+          </label>
+          <label>
+            <input type="radio" name="risk" value="Moderate" required />
+            Moderate
+            <small class="description desc-radio"
+              >Balanced risk and reward for steady growth.</small
+            >
+          </label>
+          <label>
+            <input type="radio" name="risk" value="Aggressive" required />
+            Aggressive
+            <small class="description desc-radio"
+              >High risk, aiming for maximum returns over time.</small
+            >
+          </label>
+        </div>
+
+        <!-- Financial Goals -->
+        <div>
+          <h2>What Are Your Financial Goals?</h2>
+          <input
+            id="input-goal"
+            type="text"
+            name="goals"
+            placeholder="e.g., Saving for retirement in 20 years"
+            required
+          />
+        </div>
+
+        <!-- Timeline -->
+        <div>
+          <h2>What is Your Investment Timeline?</h2>
+          <select name="timeline" required>
+            <option value="" disabled selected>Select a timeline</option>
+            <option value="short">Short-Term (1–3 years)</option>
+            <option value="medium">Medium-Term (3–7 years)</option>
+            <option value="long">Long-Term (7+ years)</option>
+          </select>
+          <small class="description">
+            Short-term investments prioritize liquidity, medium-term balances
+            growth and stability, and long-term emphasizes growth potential.
+          </small>
+        </div>
+
+        <!-- Submit -->
+        <button type="button" onclick="submitForm()">Generate Portfolio</button>
+      </form>
+    </div>
+
+    <!-- Results Section -->
+    <div id="results-section" class="section">
+      <h1>Your Personalized Portfolio</h1>
+      <canvas id="portfolioChart"></canvas>
+      <p id="expectedReturn"></p>
+      <p id="rationale"></p>
+      <button onclick="tryAgain()">Try Again</button>
+    </div>
+    <script>
+      // Switch sections
+      function startForm() {
+        document.getElementById("welcome-screen").classList.remove("active");
+        document.getElementById("form-section").classList.add("active");
+      }
+
+      function tryAgain() {
+        document.getElementById("results-section").classList.remove("active");
+        document.getElementById("form-section").classList.add("active");
+      }
+
+      // Submit form data
+      function submitForm() {
+        const form = document.getElementById("portfolioForm");
+        const formData = new FormData(form);
+
+        const data = {
+          risk: formData.get("risk"),
+          goals: formData.get("goals"),
+          timeline: formData.get("timeline"),
+        };
+
+        // Simulate backend response
+        const result = generatePortfolio(data);
+        displayResults(result);
+      }
+
+      // Mock backend response
+      function generatePortfolio(data) {
+        // Simulate portfolio based on inputs
+        const portfolio = {
+          allocation: {
+            Stocks:
+              data.risk === "Aggressive"
+                ? 70
+                : data.risk === "Moderate"
+                ? 50
+                : 30,
+            Bonds:
+              data.risk === "Aggressive"
+                ? 20
+                : data.risk === "Moderate"
+                ? 40
+                : 60,
+            Cash: data.risk === "Aggressive" ? 10 : 10,
+          },
+          expectedReturn:
+            data.risk === "Aggressive"
+              ? "8.5%"
+              : data.risk === "Moderate"
+              ? "6.5%"
+              : "4.5%",
+          rationale: `Based on your ${data.risk.toLowerCase()} risk tolerance and ${
+            data.timeline
+          }-term goal, this portfolio is designed to balance growth and stability.`,
+        };
+
+        return portfolio;
+      }
+
+      // Display results
+      function displayResults(result) {
+        document.getElementById("form-section").classList.remove("active");
+        document.getElementById("results-section").classList.add("active");
+
+        const chartData = result.allocation;
+        const chartLabels = Object.keys(chartData);
+        const chartValues = Object.values(chartData);
+
+        // Update chart
+        const ctx = document.getElementById("portfolioChart").getContext("2d");
+        new Chart(ctx, {
+          type: "pie",
+          data: {
+            labels: chartLabels,
+            datasets: [
+              {
+                data: chartValues,
+                backgroundColor: ["#007bff", "#28a745", "#ffc107"],
+              },
+            ],
+          },
+        });
+
+        document.getElementById(
+          "expectedReturn"
+        ).innerText = `Expected Annual Return: ${result.expectedReturn}`;
+        document.getElementById("rationale").innerText = result.rationale;
+      }
+    </script>
+  </body>
+</html>
